@@ -18,8 +18,8 @@ class ResizableContainer extends StatefulWidget {
     super.key,
     required this.direction,
     required this.manager,
-    required
-    ResizableDivider? divider,
+    required ResizableDivider? divider,
+    required this.maxDuration,
   }) : divider = divider ?? const ResizableDivider();
 
   /// The controller that will be used to manage programmatic resizing of the children.
@@ -31,11 +31,25 @@ class ResizableContainer extends StatefulWidget {
   /// Configuration values for the dividing space/line between this container's [children].
   final ResizableDivider divider;
 
+  final double maxDuration;
+
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
+  double getDurationInSeconds(int index) {
+    final ratios = widget.manager.controller.ratios;
+
+    if (ratios.isEmpty || index >= ratios.length) {
+      return 0;
+    }
+
+    final totalDuration = widget.maxDuration;
+    final duration = totalDuration * ratios[index];
+    return duration;
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -69,7 +83,20 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       return SizedBox(
                         height: height,
                         width: width,
-                        child: widget.manager.children()[i].child,
+                        child: Stack(
+                          children: [
+                            widget.manager.children()[i].child,
+                            Center(
+                              child: Text(
+                                getDurationInSeconds(i).toStringAsFixed(2),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                       );
                     },
                   ),
