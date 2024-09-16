@@ -75,7 +75,7 @@ class ResizableController with ChangeNotifier {
       availableSpace: _availableSpace,
     );
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   void _adjustChildSize({
