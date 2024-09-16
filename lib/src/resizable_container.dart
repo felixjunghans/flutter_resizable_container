@@ -85,12 +85,29 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         width: width,
                         child: Stack(
                           children: [
-                            widget.manager.children()[i].child,
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: widget.manager.children()[i].child),
+                                if (i <
+                                    widget.manager.children().length - 1) ...[
+                                  ResizableContainerDivider(
+                                    config: widget.divider,
+                                    direction: widget.direction,
+                                    onResizeUpdate: (delta) =>
+                                        widget.manager.adjustChildSize(
+                                      index: i,
+                                      delta: delta,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                             Center(
                               child: Text(
                                 getDurationInSeconds(i).toStringAsFixed(2),
                                 style: const TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontSize: 20,
                                 ),
                               ),
@@ -100,16 +117,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       );
                     },
                   ),
-                  if (i < widget.manager.children().length - 1) ...[
-                    ResizableContainerDivider(
-                      config: widget.divider,
-                      direction: widget.direction,
-                      onResizeUpdate: (delta) => widget.manager.adjustChildSize(
-                        index: i,
-                        delta: delta,
-                      ),
-                    ),
-                  ],
                 ],
               ],
             );
@@ -124,7 +131,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final numDividers = widget.manager.children().length - 1;
     final dividerSpace = numDividers * widget.divider.thickness +
         numDividers * widget.divider.padding;
-    return totalSpace - dividerSpace;
+    return totalSpace;
   }
 
   double _getChildSize({
