@@ -16,18 +16,14 @@ class ResizableContainer extends StatefulWidget {
   /// The sum of the [children]'s starting ratios must be equal to 1.0.
   const ResizableContainer({
     super.key,
-    required this.children,
     required this.direction,
-    this.controller,
+    required this.manager,
+    required
     ResizableDivider? divider,
   }) : divider = divider ?? const ResizableDivider();
 
-  /// A list of resizable [ResizableChild] containing the child [Widget]s and
-  /// their sizing configuration.
-  final List<ResizableChild> children;
-
   /// The controller that will be used to manage programmatic resizing of the children.
-  final ResizableController? controller;
+  final ResizableControllerManager manager;
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -40,52 +36,21 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
-  late final controller = widget.controller ?? ResizableController();
-  late final isDefaultController = widget.controller == null;
-  late final manager = ResizableControllerManager(controller);
-
-  @override
-  void initState() {
-    super.initState();
-
-    manager.setChildren(widget.children);
-  }
-
-  @override
-  void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final hasChanges = !listEquals(oldWidget.children, widget.children);
-
-    if (hasChanges) {
-      manager.updateChildren(widget.children);
-    }
-
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    if (isDefaultController) {
-      controller.dispose();
-    }
-
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
-        manager.setAvailableSpace(availableSpace);
+        widget.manager.setAvailableSpace(availableSpace);
 
         return AnimatedBuilder(
-          animation: controller,
+          animation: widget.manager.controller,
           builder: (context, _) {
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               direction: widget.direction,
               children: [
-                for (var i = 0; i < widget.children.length; i++) ...[
+                for (var i = 0; i < widget.manager.children().length; i++) ...[
                   // build the child
                   Builder(
                     builder: (context) {
@@ -104,15 +69,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       return SizedBox(
                         height: height,
                         width: width,
-                        child: widget.children[i].child,
+                        child: widget.manager.children()[i].child,
                       );
                     },
                   ),
-                  if (i < widget.children.length - 1) ...[
+                  if (i < widget.manager.children().length - 1) ...[
                     ResizableContainerDivider(
                       config: widget.divider,
                       direction: widget.direction,
-                      onResizeUpdate: (delta) => manager.adjustChildSize(
+                      onResizeUpdate: (delta) => widget.manager.adjustChildSize(
                         index: i,
                         delta: delta,
                       ),
@@ -129,7 +94,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final numDividers = widget.children.length - 1;
+    final numDividers = widget.manager.children().length - 1;
     final dividerSpace = numDividers * widget.divider.thickness +
         numDividers * widget.divider.padding;
     return totalSpace - dividerSpace;
@@ -142,6 +107,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }) {
     return direction != direction
         ? constraints.maxForDirection(direction)
-        : controller.sizes[index];
+        : widget.manager.controller.sizes[index];
   }
 }

@@ -262,6 +262,10 @@ final class ResizableControllerManager {
   }) {
     _controller._adjustChildSize(index: index, delta: delta);
   }
+
+  ResizableController get controller => _controller;
+
+  List<ResizableChild> children() => _controller._children;
 }
 
 abstract class ResizableControllerTestHelper {
